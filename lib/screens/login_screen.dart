@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:aventech_assignment/services/authentication.dart';
+import 'package:aventech_assignment/services/form_validation.dart';
+
+const kInActiveColor = Colors.grey;
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onSignedIn;
@@ -11,56 +13,28 @@ class LoginPage extends StatefulWidget {
 }
 
 enum FormType { login, register }
+enum UserType { student, staff }
 
 class _LoginPageState extends State<LoginPage> {
-  BaseAuth _auth = new Auth();
   final formKey = new GlobalKey<FormState>();
+  FormValidation _formValidation = new FormValidation();
 
   String email;
   String password;
 
   //WE WILL USE FORMTYPE VAR TO SWITCH WIDGET ON SCREEN
   FormType _formType = FormType.login;
-
-  //
-  bool validateAndSave() {
-    final form = formKey.currentState;
-    if (form.validate()) {
-      //if you don't save the form , it returns null for both email and password
-      form.save();
-      return true;
-    } else {
-      return false;
-    }
-  }
+  UserType _userType = UserType.student;
 
   void validateAndSubmit() async {
-    if (validateAndSave()) {
-      try {
-        if (_formType == FormType.login) {
-//          FirebaseUser user = (await FirebaseAuth.instance
-//              .signInWithEmailAndPassword(email: email, password: password))
-//              .user;
-
-          String userId =
-              await _auth.signInWithEmailAndPassword(email, password);
-
-          print("Signed in as : $userId");
-        } else {
-//          FirebaseUser user = (await FirebaseAuth.instance
-//              .createUserWithEmailAndPassword(email: email, password: password))
-//              .user;
-
-          String userId =
-              await _auth.createUserWithEmailAndPassword(email, password);
-
-          print("Registered in as : $userId");
-        }
-
+    try {
+      String userId = await _formValidation.validateAndSubmit(
+          email, password, formKey, _formType);
+      if (userId != null) {
         widget.onSignedIn();
-      } catch (e) {
-        print("Error :  $e");
       }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -83,28 +57,59 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: () {
-            // print("double tap working");
-            // //return AdminPage;
-
-            // Navigator.push(
-            //     context,
-            //     MaterialPageRoute(
-            //       builder: (context) => LiveOrders(),
-            //     ));
-          },
-          child: Text(
-            'Login Page User',
-          ),
+        title: Text(
+          'Login Page',
         ),
       ),
-      body: Container(
-        child: Form(
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: buildInputs() + buildSubmitButtons(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Container(
+            child: Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    height: 200.0,
+                    child: Image.asset('lib/images/leaf.png'),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      RaisedButton(
+                        color: _userType != UserType.student
+                            ? kInActiveColor
+                            : null,
+                        child: Text('Student'),
+                        onPressed: () {
+                          setState(() {
+                            _userType = UserType.student;
+                          });
+                        },
+                      ),
+                      RaisedButton(
+                        color:
+                            _userType != UserType.staff ? kInActiveColor : null,
+                        child: Text('Staff'),
+                        onPressed: () {
+                          setState(() {
+                            _userType = UserType.staff;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: buildInputs() + buildSubmitButtons(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -133,20 +138,39 @@ class _LoginPageState extends State<LoginPage> {
 
   List<Widget> buildSubmitButtons() {
     if (_formType == FormType.login) {
+      if (_userType == UserType.staff) {
+        return [
+          Container(
+            child: RaisedButton(
+              onPressed: validateAndSubmit,
+              child: Text(
+                'Staff Login',
+                style: TextStyle(
+                  fontSize: 20.0,
+                ),
+              ),
+            ),
+          ),
+        ];
+      }
       return [
-        RaisedButton(
-          onPressed: validateAndSubmit,
-          child: Text(
-            'Login',
-            style: TextStyle(
-              fontSize: 20.0,
+        Container(
+          child: RaisedButton(
+            onPressed: validateAndSubmit,
+            child: Text(
+              'Student Login',
+              style: TextStyle(
+                fontSize: 20.0,
+              ),
             ),
           ),
         ),
-        FlatButton(
-          onPressed: moveToRegister,
-          child: Text(
-            'Register as new user',
+        Container(
+          child: FlatButton(
+            onPressed: moveToRegister,
+            child: Text(
+              'Register as new user',
+            ),
           ),
         )
       ];

@@ -23,8 +23,10 @@ class _ListViewCardState extends State<ListViewCard> {
             child: Row(
               children: <Widget>[
                 Expanded(
-                  child: Image.network(
-                      'https://lh3.googleusercontent.com/proxy/cUxZkWgCzC5w0M61hVJg-gEMhi7BXkmR_PD13E5DVCHdyeFm9oH_aOyAiRDdP4c1jHR6bZLRxrOHJCNmaBbTSobtD1AQcwks4vbVoNutBE854t9rVoQ'),
+                  flex: 1,
+                  child: Image.asset(
+                    'lib/images/leaf.png',
+                  ),
                 ),
                 Expanded(
                   flex: 2,
